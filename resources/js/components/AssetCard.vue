@@ -3,6 +3,7 @@
     <div class="asset-header">{{ asset.code }}</div>
     <div class="asset-body">
       <p>Quantidade investida: {{ asset.quantity }}</p>
+      <p>Dividendos: {{ asset.dividends }}</p>
       <p>Valorização: {{ asset.gain }}</p>
     </div>
   </div>

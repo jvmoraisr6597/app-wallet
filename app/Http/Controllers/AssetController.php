@@ -31,6 +31,13 @@ class AssetController extends Controller
         return response()->json($asset);
     }
 
+    public function getAssetsByUser($id)
+    {
+        $asset = Asset::where('user_id', $id)->orderBy('order_date')->get();
+        return response()->json($asset);
+    }
+
+
     // Método para atualizar um ativo
     public function update(Request $request, $id)
     {

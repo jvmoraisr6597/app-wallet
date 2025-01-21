@@ -57,10 +57,15 @@ export default {
   },
   methods: {
     fetchUserAssets() {
-      axios.get('/api/assets/current/' + this.userId) // Endpoint da API para obter ativos do usuário
+      axios.get('/api/assets/current/' + this.userId) 
         .then(response => {
           this.assets = response.data;
+          console.log(response.data);
           this.resume = this.assets["resume"];
+          this.assets = Object.fromEntries(
+            Object.entries(this.assets)
+              .filter(([key, asset]) => asset.quantity > 0)
+          );
           delete this.assets["resume"];
           this.loading = false;
         })

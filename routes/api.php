@@ -9,6 +9,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:api');
 
 Route::get('/assets', [AssetController::class, 'index']);
+Route::get('/assets/user/{id}', [AssetController::class, 'getAssetsByUser']);
 Route::post('/assets', [AssetController::class, 'store']);
 Route::get('/assets/current/{userId}', [AssetController::class, 'calcularDadosUsuario']);
 Route::get('/assets/{id}', [AssetController::class, 'show']);
