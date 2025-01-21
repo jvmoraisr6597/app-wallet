@@ -8,8 +8,12 @@ Route::get('/', function () {
 });
 
 Route::get('/add-asset', function () {
-    return view('add-asset'); // Nome do novo arquivo Blade
+    return view('add-asset');
 })->name('add-asset');
+
+Route::get('/my-assets', function () {
+    return view('my-assets');
+})->name('my-assets');
 
 Route::get('/assets/current/{userId}', [AssetController::class, 'calcularDadosUsuario']);
 Route::get('/assets', [AssetController::class, 'index']);

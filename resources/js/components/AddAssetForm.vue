@@ -31,7 +31,7 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="original_price" class="form-label">Original Price:</label>
-                    <input type="number" v-model="form.original_price" id="original_price" class="form-control" step=".1" pattern="^\d*(\.\d{0,2})?$">
+                    <input type="number" v-model="form.original_price" id="original_price" class="form-control" step=".01" pattern="^\d*(\.\d{0,2})?$">
                 </div>
                 <div class="col-md-6">
                     <label for="quantity" class="form-label">Quantity:</label>

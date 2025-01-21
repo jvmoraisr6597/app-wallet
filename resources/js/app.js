@@ -19,11 +19,13 @@ import ExampleComponent from './components/ExampleComponent.vue';
 import UserAsset from './components/UserAssets.vue';
 import AssetCard from './components/AssetCard.vue';
 import AddAssetForm from './components/AddAssetForm.vue';
+import MyAssets from './components/MyAssets.vue';
 
 app.component('add-asset-form', AddAssetForm);
 app.component('example-component', ExampleComponent);
 app.component('user-assets', UserAsset);
 app.component('asset-card', AssetCard);
+app.component('my-assets', MyAssets);
 
 /**
  * The following block of code may be used to automatically register your
