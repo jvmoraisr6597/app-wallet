@@ -353,7 +353,7 @@ class AssetController extends Controller
         foreach ($dividends as $date => $entries) {
             if (strtotime($date) >= strtotime($order_date)) {
                 foreach ($entries as $entry) {
-                    if (strtotime($entry[2]) <= strtotime(date('Y-m-d'))) {
+                    if (strtotime($entry[2]) <= strtotime(date('Y-m-d')) && $entry[2] !== "-") {
                         $date_split = explode("-", $entry[2]);
                         if (!isset($this->dividendsHistoric[$date_split[0]])) {
                             $this->dividendsHistoric[$date_split[0]] = [];
