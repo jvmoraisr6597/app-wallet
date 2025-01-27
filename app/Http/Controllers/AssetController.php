@@ -64,7 +64,8 @@ class AssetController extends Controller
             "resume" => [
                 "total_gain" => 0,
                 "total_invest" => 0,
-                "total_dividend" => 0
+                "total_dividend" => 0,
+                "gain_per_sale" => 0
             ],
             "historic_dividends" => []
         ];
@@ -116,6 +117,9 @@ class AssetController extends Controller
                     $resultado['resume']['total_gain'] += $gain;
                     $resultado['resume']['total_invest'] += $ativo->original_price * $ativo->quantity;
                 } elseif ($ativo->order_type == 'sell') {
+                    $ativoOriginal = $resultado[$codigo];
+                    //print("preço medio: " . $ativoOriginal->original_price . " valor venda: " . $ativo->original_price . " quantidade vendida: " . $ativo->quantity);
+                    $resultado['resume']['gain_per_sale'] += ($ativo->original_price - $ativoOriginal->original_price) * $ativo->quantity; 
                     $resultado['resume']['total_invest'] -= $ativo->original_price * $ativo->quantity;
                     // Se for do tipo 'sell', decresça a quantidade, mas não altere o preço original
                     $resultado[$codigo]->quantity -= $ativo->quantity;
