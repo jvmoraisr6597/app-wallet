@@ -12,10 +12,20 @@
           <div class="d-flex flex-column flex-md-row justify-content-between">
             <p class="mb-2 mb-md-0">Total Investido: R${{ resume['total_invest'] || 0 }}</p>
             <p class="mb-2 mb-md-0">Total de Dividendos: R${{ resume['total_dividend'] || 0 }}</p>
+            <p class="mb-2 mb-md-0 ml-2">Lucro proveniente de vendas: R${{ (resume['gain_per_sale'] || 0).toFixed(2) }}</p>
             <p class="mb-2 mb-md-0">Lucro Corrente (Sem dividendos): R${{ resume['total_gain'] || 0 }}</p>
+            
+            
+          </div>
+          <div class="d-flex flex-column flex-md-row justify-content-between mt-2">
             <p class="mb-2 mb-md-0">
               Lucro Corrente (Com dividendos): R${{ ((resume['total_gain'] || 0) + (resume['total_dividend'] || 0)).toFixed(2) }}
             </p>
+            <p class="mb-2 mb-md-0">
+              Lucro Corrente (Com dividendos + vendas): R${{ ((resume['total_gain'] || 0) + (resume['total_dividend'] || 0) + (resume['gain_per_sale'] || 0)).toFixed(2) }}
+            </p>
+            <p></p>
+            <p></p>
           </div>
         </div>
       </div>
@@ -49,7 +59,8 @@
         </div>
       </div>
       <!-- Renderizar o gráfico apenas se chartData estiver definido -->
-      <div>
+      <div class="mt-3">
+        <h3>Histórico de Dividendos</h3>
         <DividendsChart :data="chartData" :options="chartOptions" />
       </div>
     </div>
