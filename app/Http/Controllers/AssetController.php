@@ -147,7 +147,7 @@ class AssetController extends Controller
     
         // Separar os dados por asset_type
         foreach ($dados as $key => $item) {
-            if ($key == "resume") continue;
+            if ($key == "resume" || $key == "historic_dividends" || $item['quantity'] == 0) continue;
             if ($item['asset_type'] === 'action') {
                 $actions[$key] = $item;
             } elseif ($item['asset_type'] === 'fii') {
