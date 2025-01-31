@@ -97,11 +97,12 @@ class AssetController extends Controller
                 // Adicionar o ativo ao array resultado
                 $resultado[$codigo] = $ativo;
 
-                $dividends = round($this->calculateOneDividend($ativo->code, $ativo->order_date, $ativo->quantity), 2);
-                $resultado[$codigo]['dividends'] += $dividends;
+                $dividends = $this->calculateOneDividend($ativo->code, $ativo->order_date, $ativo->quantity);
+                $resultado[$codigo]['dividends'] += round($dividends[0], 2);
+                $resultado[$codigo]['dividends_qty'] += $dividends[1];
                 $gain = $this->calculateGain($ativo->original_price, $resultado[$codigo]->current_price, $ativo->quantity);
                 $resultado[$codigo]['gain'] = round($resultado[$codigo]['gain'] + $gain, 2);
-                $resultado['resume']['total_dividend'] += $dividends;
+                $resultado['resume']['total_dividend'] += round($dividends[0], 2);
                 $resultado['resume']['total_gain'] += $resultado[$codigo]['gain'];
                 $resultado['resume']['total_invest'] += $ativo->original_price * $ativo->quantity;
             } else {
@@ -111,9 +112,10 @@ class AssetController extends Controller
                     $resultado[$codigo]->original_price = $newPrice;
                     $gain = $this->calculateGain($ativo->original_price, $resultado[$codigo]->current_price, $ativo->quantity);
                     $resultado[$codigo]['gain'] = round($resultado[$codigo]['gain'] + $gain, 2);
-                    $dividends = round($this->calculateOneDividend($ativo->code, $ativo->order_date, $ativo->quantity), 2);
-                    $resultado[$codigo]['dividends'] += $dividends;
-                    $resultado['resume']['total_dividend'] += $dividends;
+                    $dividends = $this->calculateOneDividend($ativo->code, $ativo->order_date, $ativo->quantity);
+                    $resultado[$codigo]['dividends'] += round($dividends[0], 2);
+                    $resultado[$codigo]['dividends_qty'] += $dividends[1];
+                    $resultado['resume']['total_dividend'] += round($dividends[0], 2);
                     $resultado['resume']['total_gain'] += $gain;
                     $resultado['resume']['total_invest'] += $ativo->original_price * $ativo->quantity;
                 } elseif ($ativo->order_type == 'sell') {
@@ -195,22 +197,24 @@ class AssetController extends Controller
                 $actions[$key]['valor_dedicado'] = 0;
                 continue;
             }
-    
+
             $pontuacaoPercent = $action['pontuacao'] / $this->factorial(count($actions));
             $actions[$key]['percent'] = $pontuacaoPercent;
             $valorParaDedicar = $valorParaActions * $pontuacaoPercent;
-    
+
+            // Ajustar o valor para ser múltiplo do preço atual da ação
+            $quantidade = floor($valorParaDedicar / $action['current_price']);
+            $valorParaDedicar = $quantidade * $action['current_price'];
+
             // Verificar se ultrapassa o saldo restante disponível
             $valorParaDedicar = min($valorParaDedicar, $saldoActions);
 
-            $valorParaDedicar = round($valorParaDedicar, 2);
-    
             // Atualizar o item com o valor a ser dedicado
             $actions[$key]['valor_dedicado'] = $valorParaDedicar;
-    
+
             // Deduzir o valor alocado deste item do saldo restante
             $saldoActions -= $valorParaDedicar;
-    
+
             // Reduzir o número de ações restantes para alocar
             $countActions--;
         }
@@ -224,30 +228,24 @@ class AssetController extends Controller
                 $fiis[$key]['valor_dedicado'] = 0;
                 continue;
             }
-    
+
             $pontuacaoPercent = $fii['pontuacao'] / $this->factorial(count($fiis));
-            $fiis[$key]['percent'] = $this->factorial(count($fiis));
+            $fiis[$key]['percent'] = $pontuacaoPercent;
             $valorParaDedicar = $valorParaFiis * $pontuacaoPercent;
-            $valorParaDedicar = round($valorParaDedicar, 2);
-            $resto = fmod($valorParaDedicar, $fii['current_price']);
-            if ($resto >= $fii['current_price'] / 2) {
-                $valorParaDedicar += $resto;
-            } else {
-                $valorParaDedicar -= $resto;
-            }
-            
-    
+
+            // Ajustar o valor para ser múltiplo do preço atual do FII
+            $quantidade = floor($valorParaDedicar / $fii['current_price']);
+            $valorParaDedicar = $quantidade * $fii['current_price'];
+
             // Verificar se ultrapassa o saldo restante disponível
             $valorParaDedicar = min($valorParaDedicar, $saldoFiis);
-            
-            $valorParaDedicar = round($valorParaDedicar, 2);
 
             // Atualizar o item com o valor a ser dedicado
             $fiis[$key]['valor_dedicado'] = $valorParaDedicar;
-    
+
             // Deduzir o valor alocado deste item do saldo restante
             $saldoFiis -= $valorParaDedicar;
-    
+
             // Reduzir o número de FIIs restantes para alocar
             $countFiis--;
         }
@@ -335,7 +333,7 @@ class AssetController extends Controller
                 continue;
             }
             $dividend = $this->calculateOneDividend($value["code"], $value["order_date"], $value["quantity"]);
-            $resultado[$key]["dividend"] = $dividend; 
+            $resultado[$key]["dividend"] = $dividend[0]; 
             $total_dividend += $dividend;
         }
         $resultado["resume"]["total_dividends"] = round($total_dividend, 2);
@@ -353,7 +351,8 @@ class AssetController extends Controller
 
         $dividends = $dividends[$code];
 
-        $total = 0;
+        $total = $dividend_qty = 0;
+
         foreach ($dividends as $date => $entries) {
             if (strtotime($date) >= strtotime($order_date)) {
                 foreach ($entries as $entry) {
@@ -379,11 +378,12 @@ class AssetController extends Controller
                         $this->dividendsHistoric[$date_split[0]][$date_split[1]]["assets"][$code] += $dividend;
                         $this->dividendsHistoric[$date_split[0]][$date_split[1]]["total"] += $dividend;
                         $total += $dividend;
+                        $dividend_qty += 1;
                     }
                 }
             }
         }
 
-        return round($total, 2);
+        return [round($total, 2), $dividend_qty];
     }
 }
