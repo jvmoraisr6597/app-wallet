@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y \
     npm \
     nodejs \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Instalação do Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
