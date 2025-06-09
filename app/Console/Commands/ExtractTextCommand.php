@@ -67,7 +67,7 @@ class ExtractTextCommand extends Command
         }
         print(json_encode($all_content));
         Redis::del("dividends");
-        Redis::sadd("dividends", json_encode($all_content));
+        //Redis::sadd("dividends", json_encode($all_content));
     }
 
     protected function formatTextInJson($fields) {

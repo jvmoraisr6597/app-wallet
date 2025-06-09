@@ -39,7 +39,15 @@ class AssetImportController extends Controller
                 $quantity = (int) $row['Quantidade'];
                 $orderType = strtoupper($row['Ação']) === 'COMPRA' ? 'buy' : 'sell';
                 $assetType = strlen($row['Código']) > 5 ? 'fii' : 'action';
+                $exists = Asset::where('user_id', Auth::id() ?? 1)
+                    ->where('code', $row['Código'])
+                    ->whereDate('order_date', \Carbon\Carbon::createFromFormat('d/m/Y', $row['Data'])->format('Y-m-d'))
+                    ->where('original_price', $originalPrice)
+                    ->exists();
 
+                if ($exists) {
+                    continue;
+                }
                 Asset::create([
                     'user_id' => Auth::id() ?? 1,
                     'name' => $row['Código'],

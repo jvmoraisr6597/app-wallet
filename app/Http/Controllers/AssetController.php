@@ -65,7 +65,8 @@ class AssetController extends Controller
                 "total_gain" => 0,
                 "total_invest" => 0,
                 "total_dividend" => 0,
-                "gain_per_sale" => 0
+                "gain_per_sale" => 0,
+                "total_per_type" => ["fii" => 0, "action" => 0]
             ],
             "historic_dividends" => []
         ];
@@ -103,6 +104,7 @@ class AssetController extends Controller
                 $gain = $this->calculateGain($ativo->original_price, $resultado[$codigo]->current_price, $ativo->quantity);
                 $resultado[$codigo]['gain'] = round($resultado[$codigo]['gain'] + $gain, 2);
                 $resultado['resume']['total_dividend'] += round($dividends[0], 2);
+                $resultado['resume']['total_per_type'][$ativo->asset_type] += $resultado[$codigo]->current_price * $ativo->quantity;
                 $resultado['resume']['total_gain'] += $resultado[$codigo]['gain'];
                 $resultado['resume']['total_invest'] += $ativo->original_price * $ativo->quantity;
             } else {
@@ -115,13 +117,15 @@ class AssetController extends Controller
                     $dividends = $this->calculateOneDividend($ativo->code, $ativo->order_date, $ativo->quantity);
                     $resultado[$codigo]['dividends'] += round($dividends[0], 2);
                     $resultado[$codigo]['dividends_qty'] += $dividends[1];
+                    $resultado['resume']['total_per_type'][$ativo->asset_type] += $resultado[$codigo]->current_price * $ativo->quantity;
                     $resultado['resume']['total_dividend'] += round($dividends[0], 2);
                     $resultado['resume']['total_gain'] += $gain;
                     $resultado['resume']['total_invest'] += $ativo->original_price * $ativo->quantity;
                 } elseif ($ativo->order_type == 'sell') {
                     $ativoOriginal = $resultado[$codigo];
                     //print("preço medio: " . $ativoOriginal->original_price . " valor venda: " . $ativo->original_price . " quantidade vendida: " . $ativo->quantity);
-                    $resultado['resume']['gain_per_sale'] += ($ativo->original_price - $ativoOriginal->original_price) * $ativo->quantity; 
+                    $resultado['resume']['gain_per_sale'] += ($ativo->original_price - $ativoOriginal->original_price) * $ativo->quantity;
+                    $resultado['resume']['total_per_type'][$ativo->asset_type] -= $ativo->original_price * $ativo->quantity;
                     $resultado['resume']['total_invest'] -= $ativo->original_price * $ativo->quantity;
                     // Se for do tipo 'sell', decresça a quantidade, mas não altere o preço original
                     $resultado[$codigo]->quantity -= $ativo->quantity;
@@ -341,23 +345,35 @@ class AssetController extends Controller
     }
 
     protected function calculateOneDividend($code, $order_date, $qty) {
-        $dividends = json_decode(Redis::smembers("dividends")[0], true);
+        $dividends = Redis::get("dividends");
+        $dividends = json_decode($dividends, true); // true para retornar como array associativo
 
-        //print(Redis::smembers("dividends")[0]);
-
-        if (!isset($dividends[$code])) {
-            return 0.00;
+        //print(gettype($dividends));
+        //print(json_encode($dividends));
+        //$dividends = $dividends[$code . ".SA"];
+        if (array_key_exists($code . ".SA", $dividends)) {
+            $dividends = $dividends[$code . ".SA"];
+        } else {
+            return [0,0];
         }
 
-        $dividends = $dividends[$code];
-
+        //print($date);
+        
         $total = $dividend_qty = 0;
 
         foreach ($dividends as $date => $entries) {
             if (strtotime($date) >= strtotime($order_date)) {
-                foreach ($entries as $entry) {
-                    if (strtotime($entry[2]) <= strtotime(date('Y-m-d')) && $entry[2] !== "-") {
-                        $date_split = explode("-", $entry[2]);
+                //print($date . " - ");
+                //print("Im here 1 - ");
+                //print(json_encode($entries));
+                //foreach ($entries as $entry) {
+                    //print("Im here 2 - ");
+                    //print(json_encode($entries));
+                    if (strtotime($entries[1]) <= strtotime(date('Y-m-d')) && $entries[1] !== "-") {
+                        //print($entries[1] . " - ");
+                        $date_split = explode("-", $entries[1]);
+                        //print("Im here 3 - ");
+                        //print(json_encode($date_split));
                         if (!isset($this->dividendsHistoric[$date_split[0]])) {
                             $this->dividendsHistoric[$date_split[0]] = [];
                         }
@@ -374,13 +390,13 @@ class AssetController extends Controller
                         }
                         
                         // Agora pode incrementar o valor
-                        $dividend = (float) str_replace(",", ".", $entry[3]) * $qty;
+                        $dividend = (float) str_replace(",", ".", $entries[2]) * $qty;
                         $this->dividendsHistoric[$date_split[0]][$date_split[1]]["assets"][$code] += $dividend;
                         $this->dividendsHistoric[$date_split[0]][$date_split[1]]["total"] += $dividend;
                         $total += $dividend;
                         $dividend_qty += 1;
                     }
-                }
+                //}
             }
         }
 

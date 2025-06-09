@@ -11,7 +11,7 @@ services:
     volumes:
       - .:/var/www
     depends_on:
-      - mysql
+      - db
     networks:
       - laravel
 
@@ -27,15 +27,17 @@ services:
     networks:
       - laravel
 
-  mysql:
+  db:
     image: mysql:8
-    environment:
-      MYSQL_DATABASE: laravel
-      MYSQL_ROOT_PASSWORD: root
-    volumes:
-      - ./docker/mysql/data:/var/lib/mysql
+    container_name: db
+    restart: always
     ports:
       - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+    volumes:
+      - dbdata:/var/lib/mysql
     networks:
       - laravel
 
@@ -57,6 +59,28 @@ services:
     container_name: laravel-redis
     ports:
       - 6379:6379
+    networks:
+      - laravel
+
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - laravel
+  
+  python:
+    build:
+      context: .
+      dockerfile: docker/python/Dockerfile
+    container_name: laravel_python
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - redis
     networks:
       - laravel
 
